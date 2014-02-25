@@ -12,12 +12,10 @@ recv_from = ARGV[0]
 send_to = ARGV[1]
 send_count = ARGV[2].to_i
 
-ctx1 = ZMQ::Context.new
-rep = ctx1.socket ZMQ::REP
+ctx = ZMQ::Context.new
+rep = ctx.socket ZMQ::REP
 rep.bind recv_from
-
-ctx2 = ZMQ::Context.new
-req = ctx2.socket ZMQ::REQ
+req = ctx.socket ZMQ::REQ
 req.connect send_to
 
 send_count.times do
