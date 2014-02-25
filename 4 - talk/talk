@@ -1,0 +1,49 @@
+#! /usr/bin/env ruby
+
+# require 'rubygems'
+require 'ffi-rzmq'
+
+if ARGV.length < 2
+  puts "usage: send <recv-from> <send-to>"
+  exit
+end
+
+recv_from = ARGV[0]
+send_to = ARGV[1]
+
+ctx = ZMQ::Context.new
+rep = ctx.socket ZMQ::REP
+rep.bind recv_from
+req = ctx.socket ZMQ::REQ
+req.connect send_to
+
+other_side_bye = false
+this_side_bye = false
+recv_thread = Thread.new do
+  recv_msg = ""
+  while not other_side_bye and not this_side_bye
+    rep.recv_string recv_msg
+    rep.send_string recv_msg, 0
+    puts "Received #{recv_msg}"
+    if recv_msg == "/bye"
+      puts "The other side said /bye, quit with /bye"
+      other_side_bye = true
+    end
+  end
+  puts "out of recv thread loop"
+end
+
+send_msg = ""
+while not this_side_bye and not other_side_bye
+  puts "Send what?"
+  send_msg = $stdin.gets.strip
+  exit if this_side_bye or other_side_bye
+  puts "Sending #{send_msg}"
+  req.send_string send_msg, 0
+  req.recv_string send_msg
+  if send_msg == "/bye"
+    puts "You said /bye"
+    this_side_bye = true
+  end
+end
+puts "out of main loop"
