@@ -1,0 +1,24 @@
+#! /usr/bin/env ruby
+
+# require 'rubygems'
+require 'ffi-rzmq'
+
+if ARGV.length < 2
+  puts "usage: send <connect-to> <send-count>"
+  exit
+end
+
+connect_to = ARGV[0]
+send_count = ARGV[1].to_i
+
+ctx = ZMQ::Context.new
+s   = ctx.socket ZMQ::REQ
+rc  = s.connect(connect_to)
+
+send_count.times do
+  puts "Send what?"
+  msg = $stdin.gets.strip
+  puts "Sending #{msg}"
+  rc = s.send_string msg, 0
+  rc = s.recv_string msg
+end

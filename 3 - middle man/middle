@@ -1,0 +1,31 @@
+#! /usr/bin/env ruby
+
+# require 'rubygems'
+require 'ffi-rzmq'
+
+if ARGV.length < 2
+  puts "usage: send <recv-from> <send-to> <send-count>"
+  exit
+end
+
+recv_from = ARGV[0]
+send_to = ARGV[1]
+send_count = ARGV[2].to_i
+
+ctx1 = ZMQ::Context.new
+rep = ctx1.socket ZMQ::REP
+rep.bind recv_from
+
+ctx2 = ZMQ::Context.new
+req = ctx2.socket ZMQ::REQ
+req.connect send_to
+
+send_count.times do
+  msg = ""
+  rep.recv_string msg
+  puts "Received #{msg}"
+  rep.send_string msg, 0
+  puts "Sending #{msg}"
+  req.send_string msg, 0
+  req.recv_string msg
+end
